@@ -1,0 +1,119 @@
+#Bagged Decision Trees for Classification
+from pandas import read_csv
+import warnings
+
+warnings.filterwarnings('ignore')
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import BaggingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import AdaBoostClassifier
+import pandas as pd
+import numpy as np
+filename = 'diabetes.csv'
+#https://www.kaggle.com/uciml/pima-indians-diabetes-database
+names = ['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'classs']
+dataframe = read_csv(filename, names=names)
+array = dataframe.values
+X = array[:,0:8]
+Y = array[:,8]
+seed = 7
+kfold = KFold(n_splits=10, random_state=seed, shuffle=True)
+cart = DecisionTreeClassifier()
+num_trees = 100
+model = BaggingClassifier(base_estimator=cart, n_estimators=num_trees, random_state=seed)
+results = cross_val_score(model, X, Y, cv=kfold)
+#print(results.mean())
+
+# Random Forest Classification
+from pandas import read_csv
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
+
+X = array[:,0:8]
+Y = array[:,8]
+num_trees = 100
+max_features = 3
+kfold = KFold(n_splits=10, random_state=7, shuffle=True)
+model = RandomForestClassifier(n_estimators=num_trees, max_features=max_features)
+results = cross_val_score(model, X, Y, cv=kfold)
+#print("Random Forest result from mean ",(results.mean()))
+# AdaBoost
+from sklearn.ensemble import AdaBoostClassifier
+num_trees = 30
+seed=7
+kfold = KFold(n_splits=10, random_state=seed, shuffle=True)
+model = AdaBoostClassifier(n_estimators=num_trees, random_state=seed)
+results = cross_val_score(model, X, Y, cv=kfold)
+#print("Results from Adaboost", results.mean())
+
+#Stochastic Gradient
+from sklearn.ensemble import GradientBoostingClassifier
+seed = 7
+num_trees = 100
+kfold = KFold(n_splits=10, random_state=seed, shuffle=True)
+model = GradientBoostingClassifier(n_estimators=num_trees, random_state=seed)
+results = cross_val_score(model, X, Y, cv=kfold)
+#print("Results from Stochastic Gradient Boosting", results.mean())
+
+# Voting
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.ensemble import VotingClassifier
+kfold = KFold(n_splits=10, random_state=7, shuffle=True)
+# create the sub models
+estimators = []
+model1 = LogisticRegression(solver='liblinear')
+estimators.append(('logistic', model1))
+model2 = DecisionTreeClassifier()
+estimators.append(('cart', model2))
+model3 = SVC(gamma='auto')
+estimators.append(('svm', model3))
+# create the ensemble model
+ensemble = VotingClassifier(estimators)
+results = cross_val_score(ensemble, X, Y, cv=kfold)
+#print("Result of voting", results.mean())
+
+from sklearn.ensemble import StackingClassifier
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import ExtraTreesClassifier
+RANDOM_SEED = 0
+X, y = dataframe.iloc[:,0:8], dataframe.iloc[:,8]
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import RidgeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import model_selection
+from mlxtend.classifier import StackingClassifier
+encoder_object = LabelEncoder()
+y = encoder_object.fit_transform(y)
+#Base Learners
+rf_clf = RandomForestClassifier(n_estimators=10, random_state=RANDOM_SEED)
+et_clf = ExtraTreesClassifier(n_estimators=5, random_state=RANDOM_SEED)
+knn_clf = KNeighborsClassifier(n_neighbors=2)
+svc_clf = SVC(C=10000.0, kernel='rbf', random_state=RANDOM_SEED)
+rg_clf = RidgeClassifier(alpha=0.1, random_state=RANDOM_SEED)
+lr_clf = LogisticRegression(C=20000, penalty='l2', random_state=RANDOM_SEED)
+dt_clf = DecisionTreeClassifier(criterion='gini', max_depth=2, random_state=RANDOM_SEED)
+adab_clf = AdaBoostClassifier(n_estimators=100)
+lr = LogisticRegression(random_state=RANDOM_SEED) # meta classifier
+sclf = StackingClassifier(classifiers=[rf_clf, et_clf, knn_clf, svc_clf, rg_clf, lr_clf, dt_clf, adab_clf], meta_classifier=lr)
+classifier_array = [rf_clf, et_clf, knn_clf, svc_clf, rg_clf, lr_clf, dt_clf, adab_clf, sclf]
+labels = [clf.__class__.__name__ for clf in classifier_array]
+acc_list = []
+var_list = []
+for clf, label in zip(classifier_array, labels):
+    cv_scores = model_selection.cross_val_score(clf, X, y, cv=5, scoring='accuracy')
+    print("Accuracy: %0.4f (+/- %0.4f) [%s]" % (cv_scores.mean(), cv_scores.std(), label))
+    acc_list.append(np.round(cv_scores.mean(),4))
+    var_list.append(np.round(cv_scores.std(),4))
+
+
+
+
